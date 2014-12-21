@@ -25,7 +25,7 @@ KPf <- function(vg, u, Zmax, radius, model) {
 }
 
 
-### REVEALS WITH ERROR ESTIMATES - WORKING ONLY FOR ONE LOCALITY
+### MAIN REVEALS FUNCTION WITH ERROR ESTIMATES FOR MULTIPLE SITES
 
 REVEALS <- function(file_name_list, file_name_avg, file_alvc, u, Zmax) {
 

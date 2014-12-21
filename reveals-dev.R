@@ -24,82 +24,40 @@ KPf <- function(vg, u, Zmax, radius, model) {
 	return(KP)
 }
 
-### MAIN REVEALS FUNCTION OLD
-
-reveals_old <- function(file_name_list, file_name_avg, u, Zmax) {
-	avg <- read.table(file_name_avg, row.names = 1, header = T, sep = ",")
-	lst <- read.table(file_name_list)
-
-	paldatasample <- read.table(as.character(lst[1, ]), sep = ",", row.names = 1, check.names = F, header = T)
-	veg <- matrix(nrow = length(row.names(paldatasample)) - 2, ncol = length(paldatasample))
-	rownames(veg) <- rownames(paldatasample)[3:length(rownames(paldatasample))]
-	colnames(veg) <- colnames(paldatasample)
-
-	## LOOP FOR TIMELAYERS
-	for (w in 1:(length(paldatasample))) {
-
-		## LOOP FOR ALL SITES
-		allsites <- matrix(nrow = nrow(avg), ncol = length(rownames(lst)))
-		allsitesprop <- matrix(nrow = nrow(avg), ncol = length(rownames(lst)))
-		for (m in 1:(length(rownames(lst)))) {
-			polcount <- read.table(as.character(lst[m, ]), sep = ",", row.names = 1, check.names = F, header = T)
-			polcount[is.na(polcount)] <- 0
-
-			## pollen sum
-			sumv <- 0
-			for (j in 1:(length(rownames(polcount)) - 2)) {
-				vg <- avg[j, 2]
-				radius <- polcount[1, w]
-				if (polcount[2, w] == 1) {
-					model <- "Prentice"
-				} else {
-					model <- "Sugita"
-				}
-
-				v <- polcount[j + 1, w]/(avg[j, 1] * KPf(vg, u, Zmax, radius, model))
-				sumv <- sumv + v
-			}
-
-			## vegetation proportion for 1 species
-			for (i in 1:(length(rownames(polcount)) - 2)) {
-				vg <- avg[i, 2]
-				radius <- polcount[1, w]
-				if (polcount[2, w] == 1) {
-					model <- "Prentice"
-				} else {
-					model <- "Sugita"
-				}
-				v1 <- polcount[i + 2, w]/(avg[i, 1] * KPf(vg, u, Zmax, radius, model))
-				allsitesprop[i, m] <- v1/sumv
-				allsites[i, m] <- v1
-			}
-		} ## END OF ALL SITES LOOP
-		veg[, w] <- rowSums(allsites)/sum(rowSums(allsites))
-
-
-	} ## END OF TIMELAYERS LOOP
-
-	return(veg)
-
-}
-
 
 ### REVEALS WITH ERROR ESTIMATES - WORKING ONLY FOR ONE LOCALITY
 
-REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
+REVEALS <- function(file_name_list, file_name_avg, file_alvc, u, Zmax) {
+
+	lst <- read.table(file_name_list, sep = ",", colClasses = "character")
+	maxk <- length(rownames(lst)) ## NO OF SITES
+
+	### READ TIME INTERVALS
+	timeint <- c()
+	for (k in 1:maxk) {
+		polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
+		timeint <- c(timeint, colnames(polcount))
+	}
+	timeint <- unique(timeint)
 
 
-	maxk <- length(file_name_list) ## NO OF SITES
 	avg <- read.table(file_name_avg, row.names = 1, header = T, sep = ",")
-	alvc <- read.table("alpha.varcov.csv", sep = ",", row.names = 1, header = T)
-	lst <- read.table(file_name_list)
-	maxt <- length(colnames(read.table(as.character(lst[1, ]), sep = ",", row.names = 1, check.names = F, header = T))) # NO OF TIMESLICES
-	REVEALS_V <- read.table(as.character(lst[1, ]), sep = ",", row.names = 1, check.names = F, header = T)
-	REVEALS_V[, ] <- 0
-	REVEALS_V <- REVEALS_V[-1:-2, ]
-	REVEALS_E <- REVEALS_V
+	alvc <- read.table(file_alvc, sep = ",", row.names = 1, header = T)
+	maxt <- length(timeint) # NO OF TIMESLICES
+	Vmean <- matrix(0, nrow = length(rownames(avg)), ncol = maxt)
+	rownames(Vmean) <- rownames(avg)
+	colnames(Vmean) <- timeint
+	varVmean <- matrix(0, nrow = length(rownames(avg)), ncol = maxt)
+	rownames(varVmean) <- rownames(avg)
+	colnames(varVmean) <- timeint
+	covVmean <- matrix(0, nrow = length(rownames(avg)), ncol = length(rownames(avg)) * maxt)
+	#REVEALS_V <- matrix(0, nrow = length(rownames(avg)), ncol = maxt)
+	#rownames(REVEALS_V) <- rownames(avg)
+#colnames(REVEALS_V) <- timeint
 
-	for (t in 1:maxt) {
+	REVEALS_V <- REVEALS_E <- list()
+
+	for (kt in 1:maxt) {
 		### u_calc
 		
 		varqa <- matrix(0, nrow = length(rownames(avg)), ncol = maxk)
@@ -110,10 +68,10 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 		for (k in 1:maxk) {
 			polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
 			polcount[is.na(polcount)] <- 0
-			sumpol <- sum(polcount[-1:-2, t])
+			sumpol <- sum(polcount[-1:-2, timeint[kt]])
 			if (sumpol > 0) {
 				for (i in 1:(length(rownames(polcount)) - 2)) { # LOOP FOR SPECIES i
-					na[i, k] <- polcount[i + 2, t]/avg[i, 1]
+					na[i, k] <- polcount[i + 2, timeint[kt]]/avg[i, 1]
 					qa[i, k] <- na[i, k]/sumpol #pollen percentage
 				}
 			}
@@ -121,9 +79,9 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 		for (k in 1:maxk) {
 			polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
 			polcount[is.na(polcount)] <- 0
-			sumpol <- sum(polcount[-1:-2, t])
+			sumpol <- sum(polcount[-1:-2, timeint[kt]])
 			if (sumpol > 0) {
-				q <- polcount[-1:-2, t]/sumpol
+				q <- polcount[-1:-2, timeint[kt]]/sumpol
 				for (i in 1:(length(rownames(polcount)) - 2)) {
 
 					if (q[i] > 0) {
@@ -135,13 +93,13 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 		for (k in 1:maxk) {
 			polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
 			polcount[is.na(polcount)] <- 0
-			sumpol <- sum(polcount[-1:-2, t])
+			sumpol <- sum(polcount[-1:-2, timeint[kt]])
 			if (sumpol > 0) {
-				q <- polcount[-1:-2, t]/sumpol
+				q <- polcount[-1:-2, timeint[kt]]/sumpol
 				for (i in 1:(length(rownames(polcount)) - 2)) {
 					for (j in 1:(length(rownames(polcount)) - 2)) { # LOOP FOR SPECIES j
 						if (i != j) {
-							covqa[i, j + (k - 1)] <- (qa[i, k] * qa[j, k]) * (-1/sumpol + alvc[i, j]/(avg[i, 1] * avg[j, 1]))
+							covqa[i, (length(rownames(polcount)) - 2) * (k - 1) + j] <- (qa[i, k] * qa[j, k]) * (-1/sumpol + alvc[i, j]/(avg[i, 1] * avg[j, 1]))
 						}
 					}
 				}
@@ -165,15 +123,16 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 		for (k in 1:maxk) {
 			polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
 			polcount[is.na(polcount)] <- 0
-			sumpol <- sum(polcount[-1:-2, t])
-			radius <- polcount[1, t]
-			if (polcount[2, t] == 1) {
-				model <- "Prentice"
-			} else {
-				model <- "Sugita"
-			}
-
+			sumpol <- sum(polcount[-1:-2, timeint[kt]])
+			radius <- polcount[1, timeint[kt]]
 			if (sumpol > 0) {
+				if (polcount[2, timeint[kt]] == 1) {
+					model <- "Prentice"
+				} else {
+					model <- "Sugita"
+				}
+
+
 				for (i in 1:(length(rownames(polcount)) - 2)) {
 					qak[i, k] <- qa[i, k]/KPf(avg[i, 2], u, Zmax, radius, model)
 					nak[i, k] <- na[i, k]/KPf(avg[i, 2], u, Zmax, radius, model)
@@ -185,11 +144,13 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 		### V
 		
 		V <- matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
+		rownames(V) <- rownames(avg)
+		colnames(V) <- lst[,1]
 
 		for (k in 1:maxk) {
 			polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
 			polcount[is.na(polcount)] <- 0
-			sumpol <- sum(polcount[-1:-2, t])
+			sumpol <- sum(polcount[-1:-2, timeint[kt]])
 			if (sumpol > 0) {
 				for (i in 1:(length(rownames(polcount)) - 2)) {
 					V[i, k] <- qak[i, k]/sumqak[k]
@@ -199,16 +160,21 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 
 		### var V
 		varV <- matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
+		rownames(varV) <- rownames(avg)
+		colnames(varV) <- lst[,1]
+
 		for (k in 1:maxk) {
 			polcount <- read.table(as.character(lst[k, ]), sep = ",", row.names = 1, check.names = F, header = T)
 			polcount[is.na(polcount)] <- 0
-			sumpol <- sum(polcount[-1:-2, t])
-			if (polcount[2, t] == 1) {
-				model <- "Prentice"
-			} else {
-				model <- "Sugita"
-			}
+			sumpol <- sum(polcount[-1:-2, timeint[kt]])
+			radius <- polcount[1, timeint[kt]]
 			if (sumpol > 0) {
+				if (polcount[2, timeint[kt]] == 1) {
+					model <- "Prentice"
+				} else {
+					model <- "Sugita"
+				}
+
 
 				for (i in 1:(length(rownames(polcount)) - 2)) {
 					varqak[i, k] <- varqa[i, k]/(KPf(avg[i, 2], u, Zmax, radius, model)^2)
@@ -218,7 +184,8 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 					ccc1 <- ccc1 + varqak[i, k]
 					for (j in 1:(length(rownames(polcount)) - 2)) {
 						if (i != j) {
-							ccc2 <- ccc2 + covqa[i, j]/(KPf(avg[i, 2], u, Zmax, radius, model) * KPf(avg[j, 2], u, Zmax, radius, model))
+							ccc2 <- ccc2 + covqa[i, (length(rownames(polcount)) - 2) * (k - 1) + j]/(KPf(avg[i, 2], u, Zmax, radius, model) * KPf(avg[j, 2], u, Zmax, 
+								radius, model))
 						}
 					}
 				}
@@ -226,7 +193,8 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 				ccc3 <- 0
 				for (i in 1:(length(rownames(polcount)) - 2)) {
 					for (j in 1:(length(rownames(polcount)) - 2)) {
-						ccc3 <- ccc3 + covqa[i, j]/(KPf(avg[i, 2], u, Zmax, radius, model) * KPf(avg[j, 2], u, Zmax, radius, model))
+						ccc3 <- ccc3 + covqa[i, (length(rownames(polcount)) - 2) * (k - 1) + j]/(KPf(avg[i, 2], u, Zmax, radius, model) * KPf(avg[j, 2], u, Zmax, 
+							radius, model))
 					}
 					covqak[i, k] <- ccc3
 				}
@@ -242,35 +210,130 @@ REVEALS <- function(file_name_list, file_name_avg, alvc, u, Zmax) {
 			}
 		}
 
-		### TEMPORARY OUTPUT FILES
+		### OUTPUT FILES FOR SINGLE SITES
 		
-		REVEALS_V[, t] <- V
-		REVEALS_E[, t] <- sqrt(varV)
+		REVEALS_V[[kt]] <- V
+		REVEALS_E[[kt]] <- sqrt(varV)
+
+		### meanV_calc
+		
+
+		nka <- vector(mode = "numeric", length = length(rownames(avg)))
+		sumnorg <- vector(mode = "numeric", length = 1000)
+		sumnk <- vector(mode = "numeric", length = 1000)
+		sumnka <- vector(mode = "numeric", length = 1000)
+		Q <- vector(mode = "numeric", length = length(rownames(avg)))
+		Qa <- matrix(0, nrow = length(rownames(avg)), ncol = 1000)
+		Vx <- matrix(0, nrow = length(rownames(avg)), ncol = 1000)
+
+		st <- which(colSums(V) > 0) # sites available with pollen counts for time period
+		nst <- sum(colSums(V)) # number of sites available at a time window
+		btns <- matrix(0, nrow = 1000, ncol = nst)
+		for (k in 1:1000) {
+			btns[k, ] <- sample(st, replace = TRUE)
+		}
+
+		for (bs in 1:1000) {
+			nk <- vector(mode = "numeric", length = length(rownames(avg)))
+			norg <- vector(mode = "numeric", length = length(rownames(avg)))
+			for (k in 1:nst) {
+				polcnt <- read.table(as.character(lst[btns[bs, k], ]), sep = ",", row.names = 1, check.names = F, header = T)
+				if (polcnt[2, timeint[kt]] == 1) {
+					model <- "Prentice"
+				} else {
+					model <- "Sugita"
+				}
+				radius <- polcnt[1,timeint[kt]]
+				for (i in 1:length(rownames(avg))) {
+
+
+					nk[i] <- nk[i] + polcnt[i + 2, kt]/KPf(avg[i, 2], u, Zmax, radius, model)
+					norg[i] <- norg[i] + polcnt[i + 2, kt]
+				}
+			}
+			for (i in 1:length(rownames(avg))) {
+				nka[i] <- nk[i]/avg[i, 1]
+			}
+			for (i in 1:length(rownames(avg))) {
+				sumnorg[bs] <- sumnorg[bs] + norg[i]
+			}
+			for (i in 1:length(rownames(avg))) {
+				sumnk[bs] <- sumnk[bs] + nk[i]
+				sumnka[bs] <- sumnka[bs] + nka[i]
+			}
+			if (sumnk[bs] > 0) {
+				for (i in 1:length(rownames(avg))) {
+					Q[i] <- nk[i]/sumnk[bs]
+				}
+			}
+			for (i in 1:length(rownames(avg))) {
+				Qa[i, bs] <- Q[i]/avg[i, 1]
+			}
+			sumQa <- 0
+			for (i in 1:length(rownames(avg))) {
+				sumQa <- sumQa + Qa[i, bs]
+			}
+			if (sumQa > 0) {
+				for (i in 1:length(rownames(avg))) {
+					Vx[i, bs] <- Qa[i, bs]/sumQa
+				}
+			}
+		}
+
+		### mean_var_calc
+		
+		sumQa <- vector(mode = "numeric", length = length(rownames(avg)))
+		
+		total <- 0
+		for (i in 1:length(rownames(avg))) {
+			for (bs in 1:1000) {
+				sumQa[i] <- sumQa[i] + Qa[i, bs]
+				total <- total + Qa[i, bs]
+			}
+		}
+		if (total > 0) {
+			for (i in 1:length(rownames(avg))) {
+				Vmean[i, kt] <- sumQa[i]/total
+			}
+		}
+
+		for (i in 1:length(rownames(avg))) {
+			sx <- sxx <- 0
+			for (bs in 1:1000) {
+				sx <- sx + Vx[i, bs]
+				sxx <- sxx + Vx[i, bs]^2
+			}
+			sss <- sxx - sx * sx/1000
+			if (sss >= 0) {
+				varVmean[i,kt] <- sss/999
+			}
+		}
+		mx <- mean(sumnka)
+		for (i in 1:length(rownames(avg))) {
+			for (j in 1:length(rownames(avg))) {
+				if (i != j) {
+					if (mx > 0) {
+						covVmean[i, length(rownames(avg)) * (kt-1) + j] <- -Vmean[i, kt] * Vmean[j, kt]/mx
+					}
+				}
+			}
+		}
 
 	} ### END OF t LOOP (TIMESLICES)
-	return(list(REVEALS_V, REVEALS_E))
+	return(list(V_sites=REVEALS_V, varV_sites=REVEALS_E, Mean_V=Vmean, Mean_SE=sqrt(varVmean)))
 } ### END OF FUNCTION REVEALS
 
 
 
-
-
-
-
-
 ### DATA INPUT
-## files should be in the same format as in LRA.REVEALS.v4.2.2
-## first row includes ages/or depths /or sample names
-## second row includes radius in m
-## third row includes model type - 1 = Prentice, 2 = Sugita
-## fourth row and onwards include taxa
 
-
-### commands
+### libraries
 library(zipfR)
-file_name_avg <- "alpha.vg.csv"
-file_name_list <- "filename_list.csv"
-alvc <- read.table("alpha.varcov.csv", sep = ",", row.names = 1, header = T)
-u <- 3
-Zmax <- 100
-REVEALS("filename_list.csv", "alpha.vg.csv", "alpha.varcov.csv", 3, 100)
+cat("Welcome to REVEALS program - based on v 4.9\n\n")
+cat("INPUT DATA: csv files (comma delimited)\n ")
+cat("- first row includes ages/or depths /or sample names\n")
+cat("- second row includes radius in m\n")
+cat("- third row includes model type - 1 = Prentice, 2 = Sugita\n")
+cat("- fourth row and onwards include taxa with pollen counts\n")
+
+

@@ -178,7 +178,7 @@ REVEALS <-
       V <-
         matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
       rownames(V) <- rownames(avg)
-      colnames(V) <- names(pollen_counts)
+      if (maxk>1) {colnames(V) <- names(pollen_counts)} else {colnames(V) <- "V"}
       
       for (k in 1:maxk) {
         if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}
@@ -195,7 +195,7 @@ REVEALS <-
       varV <-
         matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
       rownames(varV) <- rownames(avg)
-      colnames(varV) <- names(pollen_counts)
+      if (maxk>1) {colnames(varV) <- names(pollen_counts)} else {colnames(varV) <- "varV"}
       
       for (k in 1:maxk) {
         if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}

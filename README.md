@@ -5,7 +5,7 @@ Codes for Landcover Reconstruction Algorithm
 
 The source code contains following functions:
 
-REVEALS(pollen_counts, avg, alvc, u, Zmax)
+REVEALS(pollen_counts, avg, alvc, u, Zmax, dwm)
 
 Arguments
 
@@ -22,3 +22,4 @@ alvc            contains data frame with variances and covariances of PPEs for a
 
 u               wind speed in m/s
 Zmax            maximum extent of the region in metres
+dwm             type of dispersal model used: "gpm neutral", "lsm unstable"

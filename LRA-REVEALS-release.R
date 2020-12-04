@@ -1,9 +1,22 @@
-########################################################
-### This is a function for Landcover Reconstruction Algorithm (Sugita 2007a,b)
-### Release version: 1 (30 October 2016)
-### Version includes: REVEALS - calculation for single and multiple sites, bog and lake model
-### Gaussian plume model, Lagrangian stochastic model from DISQOVER package
-########################################################
+################################################################################
+# This is a function for Landcover Reconstruction Algorithm (Sugita 2007a,b)
+# Release version: 1.1 (4 December 2020)
+# Petr Kuneš
+# 
+# Version includes: REVEALS - calculation for single and multiple sites
+# The function enables using disperal deposition models for bogs and lakes,
+# Gaussian plume model, Lagrangian stochastic model
+# taken from the DISQOVER package (Theuerkauf, M., Couwenberg, J., Kuparinen, A.
+# , & Liebscher, V. 2016. A matter of dispersal: REVEALSinR introduces 
+# state-of-the-art dispersal models to quantitative vegetation reconstruction. 
+# Vegetation History and Archaeobotany 25: 541–553.
+# 
+# !!!! Please cite following publication when using this LRA code: !!!!
+# Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps 
+# quantifying past land cover in selected regions of the Czech Republic. 
+# PLoS ONE 9: e100117. 
+# 
+################################################################################
 
 ### DEFINE Sugita's KP
 KPf <- function(vg, u, Zmax, radius, model, dwm) {
@@ -55,7 +68,7 @@ REVEALS <-
       timeint <- c(timeint, colnames(polcount))
       }
       
-      timeint <- unique(timeint)
+      timeint <- sort(unique(timeint))
       } else {timeint <- colnames(pollen_counts)}
     
     
@@ -304,8 +317,8 @@ REVEALS <-
               }
               radius <- polcnt[1, timeint[kt]]
               for (i in 1:length(rownames(avg))) {
-                nk[i] <- nk[i] + polcnt[i + 2, kt] / KPf(avg[i, 2], u, Zmax, radius, model, dwm)
-                norg[i] <- norg[i] + polcnt[i + 2, kt]
+                nk[i] <- nk[i] + polcnt[i + 2, timeint[kt]] / KPf(avg[i, 2], u, Zmax, radius, model, dwm)
+                norg[i] <- norg[i] + polcnt[i + 2, timeint[kt]]
               }
             }
             for (i in 1:length(rownames(avg))) {

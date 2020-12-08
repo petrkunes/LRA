@@ -1,0 +1,20 @@
+Package: LRA
+Type: Package
+Title: Landscape Reconstruction Algorithm for Multiple Sites
+Version: 0.1.0
+Date: 8 Dec 2020
+Author: Petr Kuneš
+Maintainer: Petr Kuneš <petr.kunes@natur.cuni.cz>
+Description: This program calculates the REVEALS model [Sugita, 2007].
+  The calculation is possible for a single site or a combination of multiple sites.
+  The function enables using deposition models for bogs and lakes, and two
+  dispersal models (Gaussian plume model, Lagrangian stochastic model taken from
+  the DISQOVER package [Theuerkauf,et al. 2016]).
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Imports: zipfR
+Remotes: url::http://disqover.botanik.uni-greifswald.de/wp-content/uploads/2016/04/DISQOVER_0.7-5.tar.gz
+RoxygenNote: 7.1.1
+Depends: 
+    R (>= 2.10)

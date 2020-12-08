@@ -1,57 +1,43 @@
-################################################################################
-# This is a function for Landcover Reconstruction Algorithm (Sugita 2007a,b)
-# Release version: 1.1 (4 December 2020)
-# Petr Kuneš
-# 
-# Version includes: REVEALS - calculation for single and multiple sites
-# The function enables using disperal deposition models for bogs and lakes,
-# Gaussian plume model, Lagrangian stochastic model
-# taken from the DISQOVER package (Theuerkauf, M., Couwenberg, J., Kuparinen, A.
-# , & Liebscher, V. 2016. A matter of dispersal: REVEALSinR introduces 
-# state-of-the-art dispersal models to quantitative vegetation reconstruction. 
-# Vegetation History and Archaeobotany 25: 541–553.
-# 
-# !!!! Please cite following publication when using this LRA code: !!!!
-# Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps 
-# quantifying past land cover in selected regions of the Czech Republic. 
-# PLoS ONE 9: e100117. 
-# 
-################################################################################
+#' REVEALS (Regional Vegetation Reconstruction from Large Sites)
+#'
+#' Calculates REVEALS vegetation estimates (Sugita, 2007) from a matrix of pollen counts or a list of pollen count matrices (multiple sites) in \code{pollen_counts}.
+#' The function enables using deposition models for bogs and lakes, and two dispersal models (Gaussian plume model, Lagrangian stochastic model taken from the DISQOVER package (Theuerkauf,et al. 2016)).
+#'
+#' @param pollen_counts contains EITHER data frame of a single pollen count spreadsheet with the following structure:
+#' first row includes ages or depths or sample names (while using multiple sites colnames have to match at all sites)
+#' second row includes radius in metres
+#' third row includes model type: 1 = Prentice bog model, 2 = Sugita lake model
+#' fourth row and onwards include taxa with pollen counts
+#' OR list of data frames of multiple sites with the structure described above
+#' @param avg contains data frame where rows represent all calculated taxa, the first column is taxon name, the second column is alpha (pollen productivity estimate) and the third row is vg (fall speed of pollen)
+#' @param alvc contains data frame with variances and covariances of PPEs for all taxa arranged in columns and rows of the same size
+#' @param u wind speed in m/s
+#' @param Zmax – maximum extent of the region in metres
+#' @param dwm type of dispersal model used: "gpm neutral", "lsm unstable"
+#'
+#' @return Returns a list containing the following objects: \code{V_sites} – vegetation estimates for particular sites;
+#' \code{SE_sites} – standard errors of vegetation estimantes for particular sites;
+#' \code{Mean_V} – mean vegetation estimates for all sites;
+#' \code{Mean_SE} – standard errors of mean vegetation estimates for all sites;
+#' \code{No_sites} – number of sites used for estimating particular time window
+#'
+#' @references Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps quantifying past land cover in selected regions of the Czech Republic. PLoS ONE 9: e100117.
+#' @references Sugita, S. 2007. Theory of quantitative reconstruction of vegetation I: pollen from large sites REVEALS regional vegetation composition. Holocene 17: 229–241.
+#' @references Theuerkauf, M., Couwenberg, J., Kuparinen, A., & Liebscher, V. 2016. A matter of dispersal: REVEALSinR introduces state-of-the-art dispersal models to quantitative vegetation reconstruction. Vegetation History and Archaeobotany 25: 541–553.
+#' @note Citation of this programme: Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps quantifying past land cover in selected regions of the Czech Republic. PLoS ONE 9: e100117.
 
-### DEFINE Sugita's KP
-KPf <- function(vg, u, Zmax, radius, model, dwm) {
-  b <- 75.2 * vg / u
-  
-  #Prentice bog model
-  
-  if (dwm == "gpm neutral") {
-    if (model == "peatland") {
-      KP <-
-        (exp(-1 * b * radius ^ 0.125) - exp(-1 * b * (Zmax) ^ 0.125))
-    }
-    if (model == "lake")
-    {
-      #Sugita lake model
-      
-      xa <- b * (Zmax - radius) ^ (1 / 8)
-      xb <- b * (Zmax + radius) ^ (1 / 8)
-      xc <- b * (radius + radius) ^ (1 / 8)
-      
-      #KP<-(4*pi*radius/(b^8))*(pgamma(xa,8)-pgamma(xb,8)+pgamma(xc,8))
-      KP <-
-        (4 * pi * radius / (b ^ 8)) * (Igamma(8, xa) - Igamma(8, xb) + Igamma(8, xc)) ## NOT SURE IF THIS IS CORRECT FUNCTION - NEED CHECK!
-      
-    }
-  }
-  if (dwm == "lsm unstable") {
-    KP <- DispersalFactorK(vg, model, radius, dwm, Zmax)
-  }
-  
-  return(KP)
-}
+#' @examples
+#' # RUN REVEALS WITH MULTIPLE SITES
+#' REVEALS.mult.sites <- REVEALS(list(PC_Cerne, PC_Prasilske, PC_Rybarenska), avg, alvc, 3, 100000, "gpm neutral")
+#'
+#'
+#'
+#'
+#' @import zipfR
+#' @import DISQOVER
+#' @export
 
 
-### MAIN REVEALS FUNCTION WITH ERROR ESTIMATES FOR MULTIPLE SITES
 
 REVEALS <-
   function(pollen_counts, avg, alvc, u, Zmax, dwm) {
@@ -62,20 +48,20 @@ REVEALS <-
     ### READ TIME INTERVALS
     timeint <- c()
     if (maxk > 1) {
-    for (k in 1:maxk) {
-      
-      polcount <- pollen_counts[[k]]
-      timeint <- c(timeint, colnames(polcount))
+      for (k in 1:maxk) {
+
+        polcount <- pollen_counts[[k]]
+        timeint <- c(timeint, colnames(polcount))
       }
-      
+
       timeint <- sort(unique(timeint))
-      } else {timeint <- colnames(pollen_counts)}
-    
-    
-#     avg <-
-#       read.table(
-#         data_avg, row.names = 1, header = T, sep = ","
-#       )
+    } else {timeint <- colnames(pollen_counts)}
+
+
+    #     avg <-
+    #       read.table(
+    #         data_avg, row.names = 1, header = T, sep = ","
+    #       )
     # alvc <- read.table(file_alvc, sep = ",", row.names = 1, header = T)
     maxt <- length(timeint) # NO OF TIMESLICES
     Vmean <- matrix(0, nrow = length(rownames(avg)), ncol = maxt)
@@ -89,22 +75,22 @@ REVEALS <-
     Vsites <- matrix(0, nrow = 1, ncol = maxt)
     colnames(Vsites) <- timeint
     REVEALS_V <- REVEALS_E <- list()
-    
+
     for (k in 1:maxk) {
-      
+
       if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}
-      
+
       polcount[is.na(polcount)] <- 0
       matrix_V <- polcount[-1:-2,,drop=FALSE] * 0
       REVEALS_V[[k]] <- matrix_V
       REVEALS_E[[k]] <- matrix_V
     }
-    
-    
+
+
     #rownames(REVEALS_V) <- rownames(avg)
     #colnames(REVEALS_V) <- timeint
-    
-    
+
+
     for (kt in 1:maxt) {
       ### LOOP FOR TIMESLICES
       ### u_calc
@@ -115,7 +101,7 @@ REVEALS <-
         matrix(0, nrow = length(alvc), ncol = length(alvc) * maxk)
       na <- matrix(0, nrow = length(rownames(avg)), ncol = maxk)
       qa <- matrix(0, nrow = length(rownames(avg)), ncol = maxk)
-      
+
       for (k in 1:maxk) {
         if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}
         polcount[is.na(polcount)] <- 0
@@ -159,12 +145,12 @@ REVEALS <-
             }
           }
         }
-        
+
       }
-      
-      
-      
-      
+
+
+
+
       ### V_calc
       varqak <-
         matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
@@ -177,8 +163,8 @@ REVEALS <-
       nak <-
         matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
       sumnak <- matrix(0, nrow = 1, ncol = maxk)
-      
-      
+
+
       for (k in 1:maxk) {
         if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}
         polcount[is.na(polcount)] <- 0
@@ -190,8 +176,8 @@ REVEALS <-
           } else {
             model <- "lake"
           }
-          
-          
+
+
           for (i in 1:(length(rownames(polcount)) - 2)) {
             qak[i, k] <- qa[i, k] / KPf(avg[i, 2], u, Zmax, radius, model, dwm)
             nak[i, k] <-
@@ -202,12 +188,12 @@ REVEALS <-
         }
       }
       ### V
-      
+
       V <-
         matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
       rownames(V) <- rownames(avg)
       if (maxk>1) {colnames(V) <- names(pollen_counts)} else {colnames(V) <- "V"}
-      
+
       for (k in 1:maxk) {
         if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}
         polcount[is.na(polcount)] <- 0
@@ -218,13 +204,13 @@ REVEALS <-
           }
         }
       }
-      
+
       ### var V
       varV <-
         matrix(0, nrow = length(rownames(polcount)) - 2, ncol = maxk)
       rownames(varV) <- rownames(avg)
       if (maxk>1) {colnames(varV) <- names(pollen_counts)} else {colnames(varV) <- "varV"}
-      
+
       for (k in 1:maxk) {
         if (maxk > 1) {polcount <- pollen_counts[[k]]} else {polcount <- pollen_counts}
         polcount[is.na(polcount)] <- 0
@@ -236,8 +222,8 @@ REVEALS <-
           } else {
             model <- "lake"
           }
-          
-          
+
+
           for (i in 1:(length(rownames(polcount)) - 2)) {
             varqak[i, k] <-
               varqa[i, k] / (KPf(avg[i, 2], u, Zmax, radius, model, dwm) ^ 2)
@@ -272,13 +258,13 @@ REVEALS <-
           }
         }
       }
-      
+
       ### OUTPUT FILES FOR SINGLE SITES
       for (m in 1:maxk) {
         REVEALS_V[[m]][, kt] <- V[, m]
         REVEALS_E[[m]][, kt] <- sqrt(varV)[, m]
       }
-      
+
       st <-
         which(colSums(V) > 0) # sites available with pollen counts for time period
       nst <- length(st) # number of sites available
@@ -286,7 +272,7 @@ REVEALS <-
       if (maxk > 1 && nst > 0) {
         ### meanV_calc
         cat("   Calculating mean V\n", sep = "")
-        
+
         nka <-
           vector(mode = "numeric", length = length(rownames(avg)))
         sumnorg <- vector(mode = "numeric", length = 1000)
@@ -296,14 +282,14 @@ REVEALS <-
           vector(mode = "numeric", length = length(rownames(avg)))
         Qa <- matrix(0, nrow = length(rownames(avg)), ncol = 1000)
         Vx <- matrix(0, nrow = length(rownames(avg)), ncol = 1000)
-        
-        
+
+
         if (nst > 1) {
           btns <- matrix(0, nrow = 1000, ncol = nst)
           for (k in 1:1000) {
             btns[k,] <- sample(st, replace = TRUE)
           }
-          
+
           for (bs in 1:1000) {
             nk <- vector(mode = "numeric", length = length(rownames(avg)))
             norg <-
@@ -349,12 +335,12 @@ REVEALS <-
               }
             }
           }
-          
+
           ### mean_var_calc
           cat("   Estimating errors\n", sep = "")
           sumQa <-
             vector(mode = "numeric", length = length(rownames(avg)))
-          
+
           total <- 0
           for (i in 1:length(rownames(avg))) {
             for (bs in 1:1000) {
@@ -367,7 +353,7 @@ REVEALS <-
               Vmean[i, kt] <- sumQa[i] / total
             }
           }
-          
+
           for (i in 1:length(rownames(avg))) {
             sx <- sxx <- 0
             for (bs in 1:1000) {
@@ -386,12 +372,12 @@ REVEALS <-
                 if (mx > 0) {
                   covVmean[i, length(rownames(avg)) * (kt - 1) + j] <-
                     -Vmean[i, kt] * Vmean[j, kt] / mx
-                  
+
                 }
               }
             }
           }
-          
+
         } else {
           Vmean[,kt] <- V[,st]
           varVmean[,kt] <- varV[,st]
@@ -408,20 +394,3 @@ REVEALS <-
       return(list(V_sites = REVEALS_V, SE_sites = REVEALS_E))
     }
   } ### END OF FUNCTION REVEALS
-
-
-
-### libraries
-if (!require("reshape")) {install.packages("reshape")}
-if (!require("compositions")) {install.packages("compositions")}
-if (!require("DISQOVER")) {download.file("http://disqover.botanik.uni-greifswald.de/wp-content/uploads/2016/04/DISQOVER_0.7-5.tar.gz", "boot")
-install.packages("boot", repos = NULL, type = "source")}
-
-if (!require("zipfR")) install.packages("zipfR", dependencies = "Depends")
-
-require(DISQOVER)
-require(zipfR)
-
-cat("Welcome to REVEALS program - based on v 4.9 with calculation of error estimates for multiple sites\n\n")
-
-

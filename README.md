@@ -37,6 +37,11 @@ How do you install the package from GitHub?
    ```
    library(LRA)
    ```
+5. Run the example REVEALS calculation
+
+   ```
+   REVEALS.mult.sites <- REVEALS(list(PC_Cerne, PC_Prasilske, PC_Rybarenska), avg, alvc, 3, 100000, "gpm neutral")
+   ```
 
 
 

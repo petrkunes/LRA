@@ -14,7 +14,7 @@
 #' @references Sugita, S. 2007. Theory of quantitative reconstruction of vegetation I: pollen from large sites REVEALS regional vegetation composition. Holocene 17: 229–241.
 #' @references Theuerkauf, M., Couwenberg, J., Kuparinen, A., & Liebscher, V. 2016. A matter of dispersal: REVEALSinR introduces state-of-the-art dispersal models to quantitative vegetation reconstruction. Vegetation History and Archaeobotany 25: 541–553.
 
-#' @examples
+#'
 #'
 #'
 #' @export

@@ -20,10 +20,6 @@ KPf(vg, u, Zmax, radius, model, dwm)
 \description{
 Calculates the taxon-specific pollen dispersal-deposition coefficient required for \code{\link{REVEALS}} function.
 }
-\examples{
-
-
-}
 \references{
 Prentice, I.C. 1985. Pollen representation, source area, and basin size: Toward a unified theory of pollen analysis. Quaternary Research 23: 76–86.
 

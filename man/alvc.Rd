@@ -8,7 +8,7 @@
 A matrix with identical columns and rows. The diagonal represents error estimates. Other values are covariances, here empty (data not available).
 }
 \source{
-Kuneš, P., Abraham, V., Werchan, B., Plesková, Z., Fajmon, K., Jamrichová, E., & Roleček, J. 2019. Relative pollen productivity estimates for vegetation reconstruction in central-eastern Europe inferred at local and regional scales. The Holocene 29: 1708–1719.
+Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps quantifying past land cover in selected regions of the Czech Republic. PLoS ONE 9: e100117.
 }
 \usage{
 alvc

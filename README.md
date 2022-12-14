@@ -6,7 +6,7 @@ LRA
 This program calculates the REVEALS model [Sugita, 2007][2]. The calculation is possible for a single site or a combination of multiple sites. The function enables using deposition models for peatlands and lakes, and two dispersal models (Gaussian plume model [Prentice, 1985][1], Lagrangian stochastic model taken from the DISQOVER package [Theuerkauf,et al. 2016][3]).
 
 ~~~
-Date (version)  : v0.1.0, 8 Dec 2020
+Date (version)  : v0.1.1, 14 Dec 2022
 Author          : Petr Kuneš
 Email           : petr.kunes@natur.cuni.cz
 Citation        : Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps quantifying past land cover in selected regions of the Czech Republic. PLoS ONE 9: e100117.

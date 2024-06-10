@@ -1,8 +1,8 @@
 Package: LRA
 Type: Package
 Title: Landscape Reconstruction Algorithm for Multiple Sites
-Version: 0.1.1
-Date: 14 Dec 2022
+Version: 0.1.2
+Date: 22 May 2024
 Author: Petr Kuneš
 Maintainer: Petr Kuneš <petr.kunes@natur.cuni.cz>
 Description: This program calculates the REVEALS model [Sugita, 2007].
@@ -14,8 +14,8 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: zipfR
-Remotes: url::http://disqover.botanik.uni-greifswald.de/wp-content/uploads/2016/04/DISQOVER_0.7-5.tar.gz
-RoxygenNote: 7.2.2
+Remotes: github::r-lib/devtools, 
+         https://github.com/MartinTheuerkauf/disqover/raw/8c9bd9bc08515e3f1a8b63464951c728cc673d0b/disqover_0.9.13.tar.gz
+RoxygenNote: 7.3.1
 Depends: 
-    DISQOVER,
     R (>= 2.10)

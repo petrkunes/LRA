@@ -34,7 +34,7 @@
 #'
 #'
 #' @import zipfR
-#' @import DISQOVER
+#' @import disqover
 #' @export
 
 

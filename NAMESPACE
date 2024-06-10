@@ -2,5 +2,5 @@
 
 export(KPf)
 export(REVEALS)
-import(DISQOVER)
+import(disqover)
 import(zipfR)

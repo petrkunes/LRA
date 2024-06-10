@@ -13,9 +13,7 @@ Description: This program calculates the REVEALS model [Sugita, 2007].
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
-Imports: zipfR
-Remotes: github::r-lib/devtools, 
-         https://github.com/MartinTheuerkauf/disqover/raw/8c9bd9bc08515e3f1a8b63464951c728cc673d0b/disqover_0.9.13.tar.gz
+Imports: zipfR, disqover
 RoxygenNote: 7.3.1
 Depends: 
     R (>= 2.10)

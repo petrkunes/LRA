@@ -6,7 +6,7 @@ LRA
 This program calculates the REVEALS model [Sugita, 2007][2]. The calculation is possible for a single site or a combination of multiple sites. The function enables using deposition models for peatlands and lakes, and two dispersal models (Gaussian plume model [Prentice, 1985][1], Lagrangian stochastic model taken from the DISQOVER package [Theuerkauf,et al. 2016][3]).
 
 ~~~
-Date (version)  : v0.1.1, 14 Dec 2022
+Date (version)  : v0.1.2, 22 May 2024
 Author          : Petr Kuneš
 Email           : petr.kunes@natur.cuni.cz
 Citation        : Abraham, V., Oušková, V., & Kuneš, P. 2014. Present-day vegetation helps quantifying past land cover in selected regions of the Czech Republic. PLoS ONE 9: e100117.
@@ -19,25 +19,30 @@ How do you install the package from GitHub?
    ```
    install.packages("devtools")
    ```
-
+   
 2. Load the `devtools` package.
 
    ```
    library(devtools)
    ```
 
-3. In most cases, you just use `install_github()` function.
+3. Install the `disqover` package.
+   ```
+   install.packages("https://github.com/MartinTheuerkauf/disqover/raw/8c9bd9bc08515e3f1a8b63464951c728cc673d0b/disqover_0.9.13.tar.gz", repos = NULL, type = "source")
+   ```
+
+4. In most cases, you just use `install_github()` function.
 
    ```
    install_github("petrkunes/LRA")
    ```
 
-4. Load the `LRA` package
+5. Load the `LRA` package
 
    ```
    library(LRA)
    ```
-5. Run the example REVEALS calculation
+6. Run the example REVEALS calculation
 
    ```
    REVEALS.mult.sites <- REVEALS(list(PC_Cerne, PC_Prasilske, PC_Rybarenska), avg, alvc, 3, 100000, "gpm neutral")
